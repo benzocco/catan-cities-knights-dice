@@ -1,53 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Catan Cities & Knights Dice</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catan: Cities & Knights Dice Roller</title>
 <style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f4f4f4;
-    padding: 40px;
+  :root{
+    --bg:#f4f4f4;
+    --card:#ffffff;
+    --text:#111111;
+    --muted:#444444;
+    --shadow: 0 2px 10px rgba(0,0,0,0.10);
+    --radius: 12px;
+
+    --yellow:#f4c430;  /* gold/yellow */
+    --red:#d7263d;     /* catan-ish red */
+    --pip:#111111;     /* pip color */
   }
-  .card {
-    background: white;
+
+  body{
+    margin:0;
+    padding:40px 16px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .card{
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
     padding: 24px;
-    max-width: 420px;
-    margin: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-  button {
+
+  h2{
+    margin: 0 0 14px 0;
+    font-size: 20px;
+  }
+
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap: wrap;
+  }
+
+  button{
+    appearance:none;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
     font-size: 16px;
-    padding: 10px 16px;
     cursor: pointer;
   }
-  .result {
-    margin-top: 20px;
-    font-size: 18px;
+
+  button:active{
+    transform: translateY(1px);
+  }
+
+  .row{
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .diceRow{
+    display:flex;
+    gap: 18px;
+    align-items:center;
+    justify-content:flex-start;
+    flex-wrap: wrap;
+  }
+
+  .dieWrap{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    gap: 8px;
+    min-width: 140px;
+  }
+
+  .label{
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .valueLine{
+    margin-top: 2px;
+    font-size: 16px;
+  }
+
+  .resultBlock{
+    border-top: 1px solid #eee;
+    padding-top: 14px;
+  }
+
+  /* ===== CSS dice ===== */
+
+  .die{
+    width: 86px;
+    height: 86px;
+    border-radius: 16px;
+    position: relative;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    border: 2px solid rgba(0,0,0,0.10);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .die.yellow{ background: var(--yellow); }
+  .die.red{ background: var(--red); }
+
+  .pip{
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--pip);
+    align-self: center;
+    justify-self: center;
+    opacity: 0; /* hidden by default; shown via classes */
+  }
+
+  /* positions in 3x3 grid */
+  .p1{ grid-area: 1 / 1; } /* top-left */
+  .p2{ grid-area: 1 / 2; } /* top-middle */
+  .p3{ grid-area: 1 / 3; } /* top-right */
+  .p4{ grid-area: 2 / 1; } /* mid-left */
+  .p5{ grid-area: 2 / 2; } /* center */
+  .p6{ grid-area: 2 / 3; } /* mid-right */
+  .p7{ grid-area: 3 / 1; } /* bottom-left */
+  .p8{ grid-area: 3 / 2; } /* bottom-middle */
+  .p9{ grid-area: 3 / 3; } /* bottom-right */
+
+  /* pip visibility for each face */
+  .face-1 .p5{ opacity: 1; }
+
+  .face-2 .p1, .face-2 .p9{ opacity: 1; }
+
+  .face-3 .p1, .face-3 .p5, .face-3 .p9{ opacity: 1; }
+
+  .face-4 .p1, .face-4 .p3, .face-4 .p7, .face-4 .p9{ opacity: 1; }
+
+  .face-5 .p1, .face-5 .p3, .face-5 .p5, .face-5 .p7, .face-5 .p9{ opacity: 1; }
+
+  .face-6 .p1, .face-6 .p3, .face-6 .p4, .face-6 .p6, .face-6 .p7, .face-6 .p9{ opacity: 1; }
+
+  /* small visual polish */
+  .die::after{
+    content:"";
+    position:absolute;
+    inset: 6px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 55%);
+    pointer-events:none;
+  }
+
+  .eventLine{
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  .eventBadge{
+    display:inline-block;
+    border: 1px solid #e6e6e6;
+    background: #fafafa;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 14px;
+    margin-left: 8px;
   }
 </style>
 </head>
-<body>
 
-<div class="card">
-  <h2>Catan: Cities & Knights Dice</h2>
-  <button onclick="roll()">Roll Dice</button>
-  <div class="result" id="result"></div>
-</div>
+<body>
+  <div class="card">
+    <h2>Catan: Cities & Knights Dice</h2>
+
+    <div class="controls">
+      <button id="rollBtn" type="button">Roll Dice</button>
+    </div>
+
+    <div class="row">
+      <div class="diceRow">
+        <div class="dieWrap">
+          <div id="yellowDie" class="die yellow face-1" aria-label="Yellow die">
+            <span class="pip p1"></span><span class="pip p2"></span><span class="pip p3"></span>
+            <span class="pip p4"></span><span class="pip p5"></span><span class="pip p6"></span>
+            <span class="pip p7"></span><span class="pip p8"></span><span class="pip p9"></span>
+          </div>
+          <div class="label" id="yellowLabel">Yellow (1)</div>
+        </div>
+
+        <div class="dieWrap">
+          <div id="redDie" class="die red face-1" aria-label="Red die">
+            <span class="pip p1"></span><span class="pip p2"></span><span class="pip p3"></span>
+            <span class="pip p4"></span><span class="pip p5"></span><span class="pip p6"></span>
+            <span class="pip p7"></span><span class="pip p8"></span><span class="pip p9"></span>
+          </div>
+          <div class="label" id="redLabel">Red (1)</div>
+        </div>
+      </div>
+
+      <div class="resultBlock">
+        <div class="valueLine">Total: <strong id="totalOut">2</strong></div>
+        <div class="eventLine">
+          Event die:
+          <span class="eventBadge" id="eventOut">Ship 🚢</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
   const eventDieFaces = [
-    "Ship 🚢",
-    "Ship 🚢",
-    "Ship 🚢",
-    "Blue Gate 🔵",
-    "Green Gate 🟢",
-    "Yellow Gate 🟡"
+    "Ship 🚢", "Ship 🚢", "Ship 🚢",
+    "Blue Gate 🔵", "Green Gate 🟢", "Yellow Gate 🟡"
   ];
 
   function randInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function setDieFace(el, n) {
+    // Remove any existing face-* class
+    el.className = el.className.replace(/\bface-\d\b/g, "").trim();
+    el.classList.add(`face-${n}`);
   }
 
   function roll() {
@@ -56,14 +240,22 @@
     const total = yellow + red;
     const event = eventDieFaces[randInt(0, eventDieFaces.length - 1)];
 
-    document.getElementById("result").innerHTML = `
-      Yellow die: <strong>${yellow}</strong><br>
-      Red die: <strong>${red}</strong><br>
-      Total: <strong>${total}</strong><br>
-      Event die: <strong>${event}</strong>
-    `;
-  }
-</script>
+    const yellowDie = document.getElementById("yellowDie");
+    const redDie = document.getElementById("redDie");
 
+    setDieFace(yellowDie, yellow);
+    setDieFace(redDie, red);
+
+    document.getElementById("yellowLabel").textContent = `Yellow (${yellow})`;
+    document.getElementById("redLabel").textContent = `Red (${red})`;
+    document.getElementById("totalOut").textContent = String(total);
+    document.getElementById("eventOut").textContent = event;
+  }
+
+  document.getElementById("rollBtn").addEventListener("click", roll);
+
+  // Initial roll to show random state on load
+  roll();
+</script>
 </body>
 </html>
